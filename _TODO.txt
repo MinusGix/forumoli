@@ -1,0 +1,58 @@
+TODOS:
+=========================================================
+Users
+	- Let users delete their accounts, but not too easily that it could be automated
+	- Resize images to a lower amount so they aren't as large
+	- Add notifications
+	- Make so admins can add/take user groups from users and sort their order of importance.
+		- default usergroup is always at bottom
+		- admin usergroup is always at top
+	- Private Messaging
+		- Add a permission for this
+	- Ignore List
+		- Add a permission for this
+	- Searchable Member List
+	- Add a Report button
+		- Add a reports list for administrators
+			- Add a permission for this
+	- Add an ability to see the ips of those who log in as them
+		- Add a permission for whether people can see this
+
+Forum
+	- Build the Forum
+		- Make sections of the forum
+			- Add a permission to make sections
+			- Add a permission to see X sections, a list of the ones they can see
+		- Make so threads can be made
+			- Add a permission to make threads
+		- Make so posts can be made
+			- Add permission to do this
+		- Add bbcode or something similar to it with the ability to add your own custom bbcodes
+			- Add permission to use it
+		- Make so the forum can be browsed
+			- Add permission to do this
+		- Add attachments
+			- Add a permission to do this, perhaps a number for the limit
+		- Add polls
+			- Add a permission to do this
+		- Add signatures
+			- Add a permission to do this
+		- Ability to Subscribe to thread
+			- Add a permission to do this
+		
+
+Coding
+	- Figure out RSS and set it up
+		- add an option in config to disable this
+	- Make a config.js section for showing what words mean, (ex: OMG when hovered over will 
+		display 'Oh My God')
+		- make an admin page where they can add to it
+		- make an option to disable it without removing the words from the list
+	-  Make a console so you can run code on the server while it's running.
+		- add an option in config to disable this
+	- Make a canAccess function for express that when run returns a function
+
+Other
+	- Add option in config for email needed
+		- Make so it will send emails to them with a registration link
+	- Add captcha to signup/login

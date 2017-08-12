@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Delete Account</title>
+    <% include _css-files %>
+</head>
+<body>
+    <%- include('titlebarStart', get()) %>
+
+	<% if (isValidUser(user)) { %>
+
+		<div class="demo-card-wide mdl-card mdl-shadow--2dp">
+  			<div class="mdl-card__title">
+    			<h2 class="mdl-card__title-text">Deleting your account</h2>
+  			</div>
+  			<div class="mdl-card__supporting-text">
+    			If you want to delete your account please contact owner with your username.
+  			</div>
+  			<div class="mdl-card__actions mdl-card--border">
+  			</div>
+		</div>
+	<% } else { %>
+		<h3>You have to be logged in to try deleting your account.</h3>
+	<% } %>
+
+    
+
+    <% include titlebarEnd %>
+    <% include _js-files %>
+</body>
+</html>

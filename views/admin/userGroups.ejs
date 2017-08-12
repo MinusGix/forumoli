@@ -1,0 +1,280 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Page</title>
+    <%- include('../_css-files', get()) %>
+    <link rel="stylesheet" href="/css/dialog-polyfill.css">
+</head>
+<body>
+    <%- include('../titlebarStart', get()) %>
+    <div style="width: 30%; display: inline-block; vertical-align: top; margin: 0; padding: 0; margin-right: 2%; ">
+        <ul class="mdl-list mdl-shadow--4dp" style="margin: 0; padding: 0; height: 60vh; overflow: auto;">
+            <li class="mdl-list__item" id="firstGroup">
+                <button id="addGroup" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+                    <i class="material-icons">add</i>
+                </button>
+            </li>
+            <li class="mdl-list__item">
+                <span disabled class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                    Administrator
+                </span>
+            </li>
+            <% for (var i in usergroups) { %>
+                <li class="mdl-list__item actual">
+                    <span name="<%= usergroups[i].username %>" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                        <%= usergroups[i].displayName %>
+                    </span>
+                </li>
+            <% } %>
+            <li class="mdl-list__item" id="lastGroup">
+                <span disabled class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+                    Basic User
+                </span>
+            </li>
+        </ul>
+    </div>
+	<div id="perm-card" class="mdl-card mdl-shadow--4dp" style="display: inline-block; min-height: 60vh; width: 65%; overflow: auto; vertical-align: top; ">
+		Click a button to see the permissions
+	</div>
+
+    <dialog class="mdl-dialog">
+        <h4 class="mdl-dialog__title">Create new Usergroup?</h4>
+        <div class="mdl-dialog__content">
+            <input id="dialog-input">
+        </div>
+        <div class="mdl-dialog__actions">
+            <button type="button" class="mdl-button done">Create</button>
+            <button type="button" class="mdl-button close">Cancel</button>
+        </div>
+    </dialog>
+
+    <%- include('../titlebarEnd', get()) %>
+    <%- include('../_js-files', get()) %>
+    <script src="/js/dialog-polyfill.js"></script>
+    <script>
+        <%# TODO: Find a better way than this %>
+        // ======= MANAGE DIALOG =======
+        // =============================
+        var dialog = document.querySelector('dialog');
+        var dialogCloseButton = dialog.querySelector('.close');
+        var dialogCreateButton = dialog.querySelector('.done');
+
+        var lastButtonClicked = null;
+
+        if (!dialog.showModal) {
+            dialogPolyfill.registerDialog(dialog);
+        }
+
+        function showModal(done) {
+            document.getElementById('dialog-input').value = "" // clears the input from last time
+            function func1 () {
+                dialog.close();
+                dialogCreateButton.removeEventListener('click', func2);
+                dialogCloseButton.removeEventListener('click', func1);
+            }
+            dialogCloseButton.addEventListener('click', func1);
+            
+            function func2 () {
+                dialog.close();
+                done(document.getElementById('dialog-input').value);
+                dialogCreateButton.removeEventListener('click', func2);
+                dialogCloseButton.removeEventListener('click', func1);
+            }
+
+            dialogCreateButton.addEventListener('click', func2);
+
+            dialog.showModal();
+        }
+
+        document.getElementById('addGroup').addEventListener('click', function(e) {
+            var card = document.createElement('div'); // creates the outer list item div
+            card.className = 'mdl-list__item actual'; // gives it it's classes
+            
+
+            var cardButton = document.createElement('span'); // creates the button-span-thing
+            cardButton.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect"; // gives it it's classes
+            
+            
+            showModal(function (text) {
+                cardButton.innerText = text;
+                cardButton.setAttribute("name", text.toLowerCase());
+
+                cardButton.addEventListener('click', showPermissions);
+
+                card.append(cardButton); // puts the cardButton inside the card
+
+                document.getElementById('firstGroup').parentNode.insertBefore(card, document.getElementById('lastGroup')); // puts it before the last listItem that has the id 'lastGroup'
+
+                card.click();
+            });
+
+        });
+
+
+        // ======= ACTUAL PERMISSIONS STUFF =======
+        // ========================================
+        
+        function showPermissions (e) {
+            console.log('showPermissions activated!');
+            lastButtonClicked = this;
+            var req = new XMLHttpRequest();
+            var permcard = document.getElementById('perm-card');
+            req.addEventListener("load", function (evt) {
+                var data = JSON.parse(this.responseText);
+                
+                permcard.innerHTML = "";
+
+                if (data.message && !data.command) {
+                    document.getElementById("perm-card").innerText = data.message;
+                } else if (data.command) {
+                    if (data.command === "create") {
+                        var perms = data.perms;
+                        
+                        var saveButton = document.createElement('button');
+                        saveButton.style.margin = "5%";
+                        saveButton.innerText = "Save";
+                        saveButton.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect";
+                        saveButton.addEventListener('click', savePermissions);
+
+                        permcard.append(saveButton);
+
+                        var resetButton = document.createElement('button');
+                        resetButton.innerText = "Reset"
+                        resetButton.className = "mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect";
+                        resetButton.addEventListener('click', function (e) {
+                            if (lastButtonClicked !== null && lastButtonClicked !== undefined) {
+                                lastButtonClicked.click(); // basically just click it to reload it from the server :p
+                            } else {   
+                                // TODO: Make this a dialog instead of an alert
+                                alert('Dunno how you are clicking reset when it is not even supposed to be there.');
+                            }
+                        });
+
+                        permcard.append(resetButton);
+                        permcard.append(document.createElement('br'));
+                        console.log(perms);
+                        for (var i in perms) {
+                            var card = document.createElement('div');
+                            card.className = "mdl-card custom-card-smaller";
+                            card.setAttribute("name", i);
+
+                            var title = document.createElement('div');
+                            title.className = "mdl-card__title";
+                            title.innerText = perms[i].name;
+                            card.append(title);
+
+
+                            var text = document.createElement('div');
+                            text.className = "mdl-card__supporting-text";
+                            text.innerText = perms[i].description;
+                            card.append(text);
+                            
+                            var actions = document.createElement('div');
+                            actions.className = 'mdl-card__actions';
+
+                            var actionText = document.createElement('span');
+                            
+                            var actionSlider = document.createElement('input');
+                            actionSlider.setAttribute("type", "range");
+                            actionSlider.setAttribute("max", "2");
+                            actionSlider.setAttribute("min", "0");
+                
+                            
+
+                            
+
+                            actions.append(actionText);
+                            actions.append(actionSlider);
+                            card.append(actions);
+
+                            actionSlider.addEventListener('change', function (e) {
+                                var val = Number(this.value);
+                                var text = "";
+                                if (val === 0) {
+                                    text = "false";
+                                } else if (val === 1) {
+                                    text = "true";
+                                } else if (val === 2) {
+                                    text = "fall-through";
+                                }
+                                console.log(this.parentNode)
+                                this.parentNode.querySelector('span').innerText = text;
+                            });
+                            actionSlider.value = String(perms[i].can); // instead of being the default values they will all be 'fall-through'
+                            if ("createEvent" in document) {
+                                var evt = document.createEvent("HTMLEvents");
+                                evt.initEvent("change", false, true);
+                                actionSlider.dispatchEvent(evt);
+                            } else {
+                                actionSlider.fireEvent("onchange");
+                            }
+
+                            permcard.append(card);
+                        }
+                    }
+                }
+            });
+            req.addEventListener("error", function(evt) {
+                permcard.innerText = "Sorry, but there was an error, please try again."
+                console.log('There was an error:');
+                console.log(evt);
+                console.log(this);
+            });
+
+            permcard.innerText = "Loading...";
+
+            req.open("GET", location.origin + "/admin/api/getPermissions?date=" + Date.now() + "&name=" + encodeURIComponent(this.innerText) + "&type=name");
+            req.send();
+        }
+
+
+        function savePermissions (e) {
+            var perms = {};
+            var self = this;
+
+            var eleAllPerms = this.parentNode.querySelectorAll('.mdl-card');
+            for (let i = 0; i < eleAllPerms.length; i++) {
+                perms[eleAllPerms[i].getAttribute("name")] = Number(eleAllPerms[i].querySelector('input').value);
+            }
+            console.log(perms);
+            var req = new XMLHttpRequest();
+
+            req.addEventListener("load", function (evt) {
+                var data = this.responseText;
+                if (data === "Saved") this.innerText = data;
+                alert(data);
+            });
+
+            req.addEventListener("error", function(evt) {
+                self.innerText = "Error, Please retry";
+                console.log('There was an error in saving:');
+                console.log(evt);
+                console.log(this);
+            });
+
+            self.innerText = "Saving...";
+
+            req.open("POST", "/admin/api/savePermissions", true);
+            req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            // ?date=" + Date.now() + "&name=" + encodeURIComponent(lastButtonClicked.innerText) + "&type=name&perms=" + encodeURIComponent(JSON.stringify(perms))
+            var params = "date=" + Date.now() + "&name=" + encodeURIComponent(lastButtonClicked.innerText) + "&type=name&perms=" + encodeURIComponent(JSON.stringify(perms));
+            req.send(params);
+        }
+
+
+        // adds the listener to all the ones generated via the ejs
+        document.querySelectorAll('.mdl-list__item.actual > span').forEach(ele => ele.addEventListener('click', showPermissions));
+
+
+
+        // ====== OTHER STUFF ======
+        // =========================
+
+        console.log('%c DO NOT PUT ANYTHING IN HERE UNLESS YOU KNOW WHAT YOU ARE DOING!', 'font-size: 500%; color: red; background-color: grey;');
+        
+    </script>
+
+</body>
+</html>

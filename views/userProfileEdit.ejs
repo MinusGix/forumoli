@@ -1,0 +1,121 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Edit Your Profile</title>
+    <% include _css-files %>
+</head>
+<body>
+    <%- include('titlebarStart', get()) %>
+    <% if (isValidUser(profileUser)) { %>
+		<h3><%= isThemself ? 'Your' : profileUser.displayName %> Profile Settings</h3>
+		
+        <% if (message.length > 0) {  %>
+			<h3>Sorry, there was an problem: <%= message %></h3>
+		<% } %>
+
+        <noscript>
+            <h3>You don't have scripts enabled, thus most, if not all, of this will not work.</h3>
+        </noscript>
+
+        <form action="/users/<%= username %>/edit" method="POST" enctype="multipart/form-data">
+			<div id="cards">
+				
+                <% if (change.profilePicture === 1) { %>
+                <label for="profilePic">
+                <% } %>
+                    <div class="mdl-card mdl-shadow--2dp profile-picture-card custom-card" id="imagePreview" style="background: url('/u/<%=getImage(profileUser)%>') center / cover; cursor: pointer;">
+                        <div class="mdl-card__actions" id="username-actions">
+                            <strong>Username</strong>:<span
+                            <% if (change.username === 1) { %>
+                                contenteditable="true"
+                            <% } %>
+                            id="username-span"
+                            ><%= profileUser.local.displayName%></span>
+                        </div>
+                    </div>
+                <% if (change.profilePicture === 1) { %>
+                    </label>
+                    <input type="file" name="profilePic" accept="image/*" id="profilePic" class="hidden">
+                <% } %>
+                <div class="mdl-card mdl-shadow--2dp biography-card custom-card">
+                    <div class="mdl-card__title">
+                        <h3>Biography:</h3>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <span 
+                            <% if (change.biography === 1) { %>
+                                contenteditable="true" 
+                            <% } %>
+                            id="biography-span"><%= profileUser.profile.biography || "Nothing here..." %></span>
+                    </div>
+                </div>
+            </div>
+            <br />
+            
+            <% if (change.biography === 1) { %>
+			    <input type="text" name="biography" id="biography-input" class="hidden">
+            <% } %>
+            <% if (change.username === 1) { %>
+                <input type="text" name="username" id="username-input" class="hidden">
+            <% } %>
+            
+			<input type="submit" value="Save" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+		</form>
+    <% } else { %>
+        <a href="/login" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">Login</a>
+    <% } %>
+    
+    <% include titlebarEnd %>
+    <% include _js-files %>
+
+    <script>
+		<% if (change.profilePicture === 1 || change.username === 1) { %>
+			var shouldAppear = true;
+		<% } %>
+
+        <% if (change.biography === 1) { %>
+            document.getElementById('biography-span').addEventListener('input', function (event) {
+                document.getElementById('biography-input').value = event.target.innerText;
+            });
+        <% } %>
+
+        <% if (change.username === 1) { %>
+            document.getElementById('username-span').addEventListener('input', function (event) {
+                document.getElementById('username-input').value = event.target.innerText;
+            });
+        <% } %>
+
+        <% if (change.profilePicture === 1) { %>
+            document.getElementById('profilePic').addEventListener('change', function (event) {
+                // taken from a stackoverrflow post and modified a bit
+				if (!shouldAppear) {
+					shouldAppear = true;
+					return event.preventDefault();
+				}
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+						console.log('beep');
+                        document.getElementById('imagePreview').style['background-image'] = "url('" + e.target.result + "')";
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        <% } %>
+
+		<% if (change.biography === 1) { %>
+        	document.getElementById('biography-input').value = document.getElementById('biography-span').innerText;
+		<% } %>
+
+		<% if (change.username === 1) { %>
+			document.getElementById('username-actions').addEventListener('click', function (event) {
+				shouldAppear = false;
+				event.preventDefault();
+			});
+            document.getElementById('username-input').value = document.querySelector('#username-actions > span').innerText;
+		<% } %>
+    </script>
+</body>
+</html>

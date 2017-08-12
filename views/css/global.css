@@ -1,0 +1,336 @@
+/*html, body {
+	height: 100vh;
+	width: 100vw;
+	background-color: #CCC;
+}
+div#titlebar {
+	width: 100vw;
+	height: 6vh;
+	background-color: black;
+	border-bottom-left-radius: 3vh;
+	border-bottom-right-radius: 3vh;
+}
+div#titlebar > span.titlebar-entry {
+	display: inline-block;
+	margin-left: 2vw;
+}
+div#titlebar > span.titlebar-entry:active {
+	animation-name: wobble;
+	animation-duration: 100ms;
+	animation-timing-function: linear;
+}
+div#titlebar > span.titlebar-entry >  a {
+	color: white;
+	text-decoration: none;
+	font-size: 5vh;
+}
+
+form {
+	width: 35%;
+	margin: 0 auto;
+	margin-top: 5%;
+}
+form > div.form-group {
+	margin-left: 5%;
+	margin-bottom: 5%;
+}
+form > div.form-group > label {
+	position: absolute;
+	text-align: center;
+}
+form > div.form-group > input {
+	margin-left: 20%;
+	border: 0px;
+}
+
+form > button {
+	width: 100%;
+	border: 1px dashed gray;
+	border-radius: 10px;
+	padding: 1%;
+}
+
+div.footer {
+	position: absolute;
+	bottom: 0;
+	margin: auto;
+	width: 98vw;
+	margin-left: 1vw;
+	text-align: center;
+}
+
+
+@keyframes wobble {
+	0% {
+		transform: rotate(5deg);
+	}
+	25% {
+		transform: rotate(2.5deg);
+	}
+	50% {
+		transform: rotate(0deg);
+	}
+	75% {
+		transform: rotate(-2.5deg);
+	}
+	100% {
+		transform: roate(-5deg);
+	}
+}
+
+@keyframes flip {
+	0% {
+		transform: rotate(0deg);
+	}
+	20% {
+		transform: rotate(36deg);
+	}
+	40% {
+		transform: rotate(72deg);
+	}
+	60% {
+		transform: rotate(108deg);
+	}
+	80% {
+		transform: rotate(144deg);
+	}
+	100% {
+		transform: rotate(180deg);
+	}
+}
+*/
+
+
+/*=======================
+===== FORMS =============
+=======================*/
+
+.center {
+	align-items: center;
+	justify-content: center;
+}
+
+
+/*=======================
+===== OTHER =============
+=======================*/
+
+.hidden {
+	display: none;
+}
+
+.major-text {
+	font-size: 125%;
+}
+
+.cust-layout {
+	padding: 1%;
+}
+
+.cust-layout>h3 {
+	text-align: center;
+	border-bottom: 1px dashed grey;
+	padding-bottom: 1%;
+}
+
+#cards {
+	padding-bottom: 2%;
+}
+
+.custom-card {
+	display: inline-block;
+	border: 1px dashed slategrey;
+	margin-right: 2%;
+	margin-bottom: 2%;
+	max-height: 256px;
+}
+
+.custom-card-smaller {
+	display: inline-block;
+	border: 1px dashed slategrey;
+	margin-right: 1%;
+	margin-bottom: 1%;
+	height: 256px;
+	width: 256px;
+	overflow-y: auto;
+}
+
+.profile-picture-card {
+	width: 256px;
+	height: 256px;
+	position: relative;
+}
+
+.profile-picture-card>.mdl-card__actions {
+	height: 52px;
+	padding: 16px;
+	background: rgba(0, 0, 0, 0.7);
+	position: absolute;
+	bottom: 0;
+}
+
+.profile-picture-card>.mdl-card__actions {
+	color: #fff;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.biography-card {
+	overflow-y: auto;
+}
+
+.biography-card>.mdl-card__actions {
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+.biography-card>.mdl-card__title {
+	align-items: flex-start;
+}
+
+.biography-card>.mdl-card__title>h3 {
+	margin-top: 0;
+}
+
+
+
+
+/* taken from: https://codepen.io/etcpe9/pen/PqyOye */
+.mdl-select {
+	position: relative;
+	font-size: 16px;
+	display: inline-block;
+	box-sizing: border-box;
+	width: 300px;
+	max-width: 100%;
+	margin: 0;
+	padding: 20px 0;
+}
+
+.mdl-select__input {
+	border: none;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+	display: inline-block;
+	font-size: 16px;
+	margin: 0;
+	padding: 4px 0;
+	width: 100%;
+	background: 16px;
+	text-align: left;
+	color: inherit;
+}
+
+.mdl-select.is-focused .mdl-select__input {
+	outline: none;
+}
+
+.mdl-select.is-invalid .mdl-select__input {
+	border-color: rgb(222, 50, 38);
+	box-shadow: none;
+}
+
+.mdl-select.is-disabled .mdl-select__input {
+	background-color: transparent;
+	border-bottom: 1px dotted rgba(0, 0, 0, 0.12);
+}
+
+.mdl-select__label {
+	bottom: 0;
+	color: rgba(0, 0, 0, 0.26);
+	font-size: 16px;
+	left: 0;
+	right: 0;
+	pointer-events: none;
+	position: absolute;
+	top: 24px;
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-align: left;
+}
+
+.mdl-select.is-dirty .mdl-select__label {
+	visibility: hidden;
+}
+
+.mdl-select--floating-label .mdl-textfield__label {
+	-webkit-transition-duration: 0.2s;
+	transition-duration: 0.2s;
+	-webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mdl-select--floating-label.is-focused .mdl-select__label,
+.mdl-select--floating-label.is-dirty .mdl-select__label {
+	color: rgb(63, 81, 181);
+	font-size: 12px;
+	top: 4px;
+	visibility: visible;
+}
+
+.mdl-select--floating-label.is-focused .mdl-select__expandable-holder .mdl-select__label,
+.mdl-select--floating-label.is-dirty .mdl-select__expandable-holder .mdl-select__label {
+	top: -16px;
+}
+
+.mdl-select--floating-label.is-invalid .mdl-select__label {
+	color: rgb(222, 50, 38);
+	font-size: 12px;
+}
+
+.mdl-select__label:after {
+	background-color: rgb(63, 81, 181);
+	bottom: 20px;
+	content: '';
+	height: 2px;
+	left: 45%;
+	position: absolute;
+	-webkit-transition-duration: 0.2s;
+	transition-duration: 0.2s;
+	-webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	visibility: hidden;
+	width: 10px;
+}
+
+.mdl-select.is-focused .mdl-select__label:after {
+	left: 0;
+	visibility: visible;
+	width: 100%;
+}
+
+.mdl-select.is-invalid .mdl-select__label:after {
+	background-color: rgb(222, 50, 38);
+}
+
+.mdl-select__error {
+	color: rgb(222, 50, 38);
+	position: absolute;
+	font-size: 12px;
+	margin-top: 3px;
+	visibility: hidden;
+}
+
+.mdl-select.is-invalid .mdl-select__error {
+	visibility: visible;
+}
+
+.mdl-select__expandable-holder {
+	display: inline-block;
+	position: relative;
+	margin-left: 32px;
+	-webkit-transition-duration: 0.2s;
+	transition-duration: 0.2s;
+	-webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	display: inline-block;
+	max-width: 0.1px;
+}
+
+.mdl-select.is-focused .mdl-select__expandable-holder,
+.mdl-select.is-dirty .mdl-select__expandable-holder {
+	max-width: 600px;
+}
+
+.mdl-select__expandable-holder .mdl-select__label:after {
+	bottom: 0;
+}

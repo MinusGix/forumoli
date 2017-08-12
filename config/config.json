@@ -1,0 +1,4 @@
+{
+	"_comment":"Makes the next user who SIGNS UP admin, it will then set itself to false. This is to make the first user who joins an admin.",
+	"makeNextUserAdmin":true
+}

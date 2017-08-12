@@ -1,0 +1,50 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><%= profileUser.local.displayName %>'s Profile</title>
+    <% include _css-files %>
+</head>
+<body>
+    <%- include('titlebarStart', get()) %>
+
+    <% if (isValidUser(profileUser)) { %>          
+        <h3><%= isThemself ? 'Your' : profileUser.local.displayName + "'s" %> Profile</h3>
+        <div id="cards">
+            <div class="mdl-card mdl-shadow--2dp profile-picture-card custom-card" style="background: url('/u/<%=getImage(profileUser)%>') center / cover;">
+                <div class="mdl-card__actions">
+                    <strong>Username</strong>:<span><%= profileUser.local.displayName%></span>
+                </div>
+            </div>    
+            <div class="mdl-card mdl-shadow--2dp biography-card custom-card">
+                <div class="mdl-card__title">
+                    <h3>Biography:</h3>
+                </div>
+                <div class="mdl-card__supporting-text">
+                    <span style="color: darkgreen"><%= profileUser.isAdmin() ? (profileUser.local.displayName + ' is an admin!'):'' %></span><br>
+                    <%= profileUser.profile.biography || "Nothing here..." %>
+                </div>
+            </div>
+        </div>
+        <br />
+        <% if (canEdit) { %>
+            <a href="/users/<%=profileUser.local.displayName%>/edit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">Edit Profile</a>
+        <% } if (isValidUser(user)) { %>
+            <% if (user.isAdmin()) { %>
+                <a href="/admin/usergroups/<%=profileUser.local.displayName%>" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">Edit Usergroups</a>
+            <% } %>
+        <% } if (isThemself) { %>
+            <a href="/logout" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">Logout</a>
+        <% } %>
+
+    <% } else { %>
+        <p class="major-text">
+            Sorry but there was an error viewing this profile.
+        </p>
+    <% } %>
+
+    <% include titlebarEnd %>
+    <% include _js-files %>
+</body>
+</html>

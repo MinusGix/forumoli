@@ -1,0 +1,203 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin Page</title>
+    <% include ../_css-files %>
+</head>
+<body>
+    <%- include('../titlebarStart', get()) %>
+	<h3><%= isThemself ? 'Your' : profileUser.local.displayName + "'s" %> Usergroups</h3>
+	
+	<div class="mdl-select mdl-js-select mdl-select--floating-label">
+		<select name="" id="usergroups" class="mdl-select__input"></select>
+	</div>
+	<button id="add-usergroup-button" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
+  		<i class="material-icons">add</i>
+	</button>
+	<button id="save-usergroups-button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+  		Save
+	</button>
+	<ul class="mdl-list">
+		<% if (profileUser.isAdmin()) { %>
+			<li class="mdl-list__item">
+				<span class="mdl-list__item-primary-content">Administrator</span>
+			</li>
+		<% } %>
+
+		<% for (var i = 0; i < usergroups.length; i++) { %>
+			<li class="mdl-list__item" draggable="true">
+				<span class="mdl-list__item-primary-content" group_id="<%= usergroups[i].id %>"><%= usergroups[i].displayName %></span>
+			</li>
+		<% } %>
+
+		<li class="mdl-list__item" id="lastgroup">
+			<span class="mdl-list__item-primary-content">Basic User</span>
+		</li>
+	</ul>
+
+   
+
+    <% include ../titlebarEnd %>
+    <% include ../_js-files %>
+	<script>
+		var select = document.getElementById('usergroups');
+
+		function loadUsergroups () {
+			var req = new XMLHttpRequest();
+			req.addEventListener("load", function (evt) {
+                var data = JSON.parse(this.responseText);
+				// should be an array.
+
+				select.innerHTML = ''; // clears it
+
+				for (let i = 0; i < data.length; i++) {
+					var opt = document.createElement('option');
+					opt.setAttribute('value', data[i][1]);
+					opt.innerText = data[i][0];
+
+					select.append(opt);
+				}
+			});
+
+			req.addEventListener("error", function(evt) {
+				// TODO: make something better than this
+                alert("Sorry, but there was an error, please try again.");
+                console.log('There was an error:');
+                console.log(evt);
+                console.log(this);
+            });
+
+            req.open("POST", "/admin/api/getUsergroups", true);
+            req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            var params = "date=" + Date.now() + "&wants=" + encodeURIComponent(JSON.stringify(["displayName", "id"]));
+
+			req.send(params);
+		}
+
+		function saveUsergroups () {
+			var req = new XMLHttpRequest();
+			req.addEventListener("load", function (evt) {
+				alert(this.responseText);
+			});
+
+			req.addEventListener("error", function(evt) {
+				// TODO: make something better than this
+                alert("Sorry, but there was an error, please try again.");
+                console.log('There was an error:');
+                console.log(evt);
+                console.log(this);
+            });
+
+			var groups = Array.prototype.slice.call(document.querySelectorAll('ul>li>span')).slice(0);
+
+			groups = groups.slice(0, groups.length-1).map(ele => ele.getAttribute('group_id'));
+
+
+            req.open("POST", "/admin/api/saveUsersUsergroups", true);
+            req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            var params = "date=" + Date.now() + "&groups=" + encodeURIComponent(JSON.stringify(groups)) + "&username=" + encodeURIComponent("<%=profileUser.local.username%>");
+
+			req.send(params);
+		}
+
+		document.getElementById('add-usergroup-button').addEventListener('click', function(e) {
+			var value = document.getElementById('usergroups').value;
+			
+			var li = document.createElement('li');
+			li.className = "mdl-list__item";
+			li.setAttribute('draggable', 'true');
+
+			var span = document.createElement('span');
+			span.className = "mdl-list__item-primary-content";
+			span.setAttribute('group_id', value);
+			span.innerText = select.querySelector(`option[value='${value}']`).innerText;
+
+			li.append(span);
+
+			li.addEventListener('dragstart', handleDragStart, false);
+        	li.addEventListener('dragenter', handleDragEnter, false)
+        	li.addEventListener('dragover', handleDragOver, false);
+        	li.addEventListener('dragleave', handleDragLeave, false);
+        	li.addEventListener('drop', handleDrop, false);
+        	li.addEventListener('dragend', handleDragEnd, false);
+
+			document.querySelector('ul').insertBefore(li, document.getElementById('lastgroup'));
+		});
+
+		document.getElementById('save-usergroups-button').addEventListener('click', function(e) {
+			saveUsergroups();
+		});
+		var dragSrcEl = null;
+
+    	function handleDragStart(e) {
+        	// Target (this) element is the source node.
+        	//this.style.opacity = '0.4';
+
+        	dragSrcEl = this;
+
+        	e.dataTransfer.effectAllowed = 'move';
+        	e.dataTransfer.setData('text/html', this.innerHTML);
+    	}
+
+    	function handleDragOver(e) {
+        	if (e.preventDefault) {
+            	e.preventDefault(); // Necessary. Allows us to drop.
+        	}
+
+        	e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+        	return false;
+    	}
+
+    	function handleDragEnter(e) {
+        	// this / e.target is the current hover target.
+        	this.classList.add('over');
+    	}
+
+    	function handleDragLeave(e) {
+        	this.classList.remove('over');  // this / e.target is previous target element.
+    	}
+
+    	function handleDrop(e) {
+        	// this/e.target is current target element.
+
+        	if (e.stopPropagation) {
+            	e.stopPropagation(); // Stops some browsers from redirecting.
+        	}
+
+        	// Don't do anything if dropping the same column we're dragging.
+        	if (dragSrcEl != this) {
+            	// Set the source column's HTML to the HTML of the column we dropped on.
+            	dragSrcEl.innerHTML = this.innerHTML;
+            	this.innerHTML = e.dataTransfer.getData('text/html');
+        	}
+
+        	return false;
+    	}
+
+    	function handleDragEnd(e) {
+        	// this/e.target is the source node.
+
+        	[].forEach.call(cols, function (col) {
+            	col.classList.remove('over');
+        	});
+    	}
+
+    	var cols = document.querySelectorAll('li[draggable="true"]');
+    	[].forEach.call(cols, function (col) {
+        	col.addEventListener('dragstart', handleDragStart, false);
+        	col.addEventListener('dragenter', handleDragEnter, false)
+        	col.addEventListener('dragover', handleDragOver, false);
+        	col.addEventListener('dragleave', handleDragLeave, false);
+        	col.addEventListener('drop', handleDrop, false);
+        	col.addEventListener('dragend', handleDragEnd, false);
+    	});
+
+
+		loadUsergroups();
+		setInterval(loadUsergroups, 600000); // reloads usergroups every 10 minutes.
+	</script>
+</body>
+</html>

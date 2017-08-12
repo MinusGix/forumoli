@@ -1,0 +1,31 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Home</title>
+    <%- include('../_css-files', get()) %>
+</head>
+<body>
+    <%- include('../titlebarStart', get()) %>
+    <div id="cards">
+        <% for (var i in permissions) { %>
+            <div class="mdl-card custom-card">
+                <div class="mdl-card__title">
+                    <%= permissions[i].name %>
+                </div>
+			    <div class="mdl-card__supporting-text">
+			    	<%= permissions[i].description %>
+			    </div>
+			    <div class="mdl-card__actions">
+                    <strong>Can:</strong> <%= permissions[i].can %>
+			    </div>
+		    </div>
+        <% } %>
+    </div>
+
+
+    <%- include('../titlebarEnd', get()) %>
+    <%- include('../_js-files', get()) %>
+</body>
+</html>

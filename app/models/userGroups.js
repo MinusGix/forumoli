@@ -1,7 +1,7 @@
-module.exports = function (mongoose, config, func) {
+module.exports = function (module_UserGroup, mongoose, config, func) {
 
 	// define the schema for our user model
-	var userGroupSchema = mongoose.Schema({
+	var userGroupSchema = mongoose.Schema(func.mergeDeep({
 		name: {
 			type: String,
 			default: 'unnamed usergroup'
@@ -26,7 +26,7 @@ module.exports = function (mongoose, config, func) {
 				default: config.storageVersions.userGroup
 			}, // 0 is the first version
 		}
-	});
+	}, module_UserGroup));
 
 	
 	userGroupSchema.method.getPermission = async function (permName) {

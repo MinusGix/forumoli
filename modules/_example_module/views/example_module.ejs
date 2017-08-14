@@ -1,0 +1,22 @@
+<!doctype html>
+<html class="mdc-typography">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Home</title>
+    <%- include('../../../views/_css-files', get()) %>
+</head>
+<body>
+    <%- include('../../../views/titlebarStart', get()) %>
+
+    <h1>Example Module Page</h1>
+    <% if (isValidUser(user)) { %>
+        <% if (typeof(user.example_module_random_name) !== 'undefined') { %>
+            <p>example_module_random_name : <%= user.example_module_random_name %> </p>
+        <% } %>
+    <% } %>
+
+    <%- include('../../../views/titlebarEnd', get()) %>
+    <%- include('../../../views/_js-files', get()) %>
+</body>
+</html>

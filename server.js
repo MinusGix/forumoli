@@ -303,8 +303,62 @@ function isValidProfilePicture(picture) {
     return [true, 'Success'];
 }
 
+
+// route middleware to ensure user is logged in
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+
+    res.redirect('/');
+}
+
+// checks if the user is logged in and is an admin
+function isAdminM(req, res, next) {
+    if (req.isAuthenticated()) {
+        if (func.isAdmin(req.user)) {
+            return next();
+        }
+    }
+    res.redirect('/');
+}
+
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+function mergeDeep(target, ...sources) {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+}
+
 var func = {
     copy,
+    isObject,
+    mergeDeep,
     getPermission,
     getAllPermissions,
     isAdmin,
@@ -314,17 +368,130 @@ var func = {
     isValidBiography,
     isValidProfilePicture,
     getImage,
+    generateReqData,
+    middleware: {
+        getProfileUserByName,
+        isAdminM,
+        isLoggedIn,
+    },
     fs: require('fs'),
 };
+// find a profile user by their username
+async function getProfileUserByName(req, res, next) {
+        // makes sure it's a string
+        if (typeof (req.params.username) !== 'string') {
+            return res.render('_error.ejs', await func.generateReqData(req.user, {
+                message: 'Please give a username.'
+            }));
+        }
+
+        try {
+            let user = await User.findOne({
+                'local.username': req.params.username.toLowerCase()
+            });
+
+            if (!func.isValidUser(user)) {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
+                    message: `A user with the name "${req.params.username}" was not found.`
+                }));
+            }
+
+            req.profileUser = user;
+            req.isThemself = false;
+
+            // decides whether they are viewing themself or not
+            if (func.isValidUser(req.user) && func.isValidUser(user)) {
+                req.isThemself = user.id === req.user.id;
+            }
+
+            // goes to the next function in an express function
+            return next();
+        } catch (err) {
+            console.error(err);
+
+            // if there is an error and we are in dev mode it will display it on the page for simplicity
+            if (isDev) {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
+                    message: err
+                }));
+            } else {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
+                    message: 'Error #0001, contact the administrator if this problem continues.'
+                }));
+            }
+        }
+    };
+async function generateReqData(user, extraObj) {
+    let obj = {
+        config, // the config, so if we want to do anything based on it
+        user, // the user who is requesting the page
+        isValidUser, // a function that tells if it is a valid user, checks if they are 'enabled'
+        getImage, // gets the users image
+        func, // some functions which are useful
+        message: '', // so anything that relies on this won't break if the message is undefined
+        get: function () { // returns this obj so we can pass it to the titlebar in ejs's include()
+            return this;
+        }
+    };
+
+    if (isValidUser(user)) {
+        obj.permissions = await user.getPermissions();
+    }
+
+    if (typeof (extraObj) === 'object' && extraObj !== null) {
+        Object.assign(obj, extraObj); // mixes the two objects, extraObj properties will take precedence over obj's properties
+    }
+
+    return obj;
+}
+
+var module_folders = func.fs.readdirSync('./modules');
+var module_User = {};
+var module_UserGroup = {};
+var module_Config = {};
+
+for (let i = 0; i < module_folders.length; i++) {
+    var folder = module_folders[i];
 
 
+    var manifest_loc = `./modules/${folder}/manifest.json`;
+    var manifest = func.fs.existsSync(manifest_loc);
 
+    if (!manifest) {
+        console.log(`WARNING: Module with the folder name "${folder}" does not have a manifest.json`);
+        manifest = {};
+    } else {
+        manifest = JSON.parse(func.fs.readFileSync(manifest_loc, 'utf8'));
+    }
+
+    if (!manifest.name) manifest.name = folder;
+    if (!manifest.version) manifest.version = '0.0.1';
+    if (!manifest.forVersion) manifest.forVersion = '*.*.*';
+    if (!manifest.author) manifest.author = 'Unknown';
+    if (!manifest.entryScript) manifest.entryScript = "index.js";
+    if (!manifest.models) manifest.models = {};
+    if (!manifest.config) manifest.config = '';
+
+    module_folders[i] = [manifest, module_folders[i]];
+
+    if (manifest.models.user) {
+        module_User = mergeDeep(module_User, require(`./modules/${folder}/${manifest.models.user}`)(func));
+    }
+
+    if (manifest.models.usergroup) {
+        module_UserGroup = mergeDeep(module_UserGroup, require(`./modules/${folder}/${manifest.models.usergroup}`)(func));
+    }
+    
+    if (manifest.config) {
+        module_Config = mergeDeep(module_Config, require(`./modules/${folder}/${manifest.config}`)(func))
+    }
+}
 
 //====================================
 //======= SETUP/REQUIRES =============
 //====================================
 
-var config = require('./config/config.js')(func); // the config file. // TODO: Find if it would be better to use .js or .json
+var config = require('./config/config.js')(module_Config, func); // the config file. // TODO: Find if it would be better to use .js or .json
 var isDev = config.isDev; // if it is in dev mode, show errors on page if it is
 
 
@@ -348,8 +515,8 @@ var session = require('express-session'); // keeps sessions between opening/clos
 var configDB = require('./config/database.js'); // loads the database config
 var store = new(require('express-sessions'))(configDB.db); // loads the sessions with that database // TODO: find what this is
 
-var UserGroup = require('./app/models/userGroups.js')(mongoose, config, func);
-var User = require('./app/models/user.js')(mongoose, config, func, UserGroup);
+var UserGroup = require('./app/models/userGroups.js')(module_UserGroup, mongoose, config, func);
+var User = require('./app/models/user.js')(module_User, mongoose, config, func, UserGroup);
 
 //====================================
 //======= CONFIGURATION ==============
@@ -366,7 +533,6 @@ db.once('open', function () {
     console.log("connected to Database");
 });
 
-
 //====================================
 //======= OTHER ======================
 //====================================
@@ -374,13 +540,7 @@ process.on('unhandledRejection', (err) => {
     console.error('Async/Await error: ' + err);
     process.exit(1);
 });
-
-
-//////////////
-
 require('./config/passport')(config, passport, User, UserGroup, func); // pass passport for configuration
-
-
 //====================================
 //======= EXPRESS ====================
 //====================================
@@ -421,6 +581,48 @@ app.use('/images', express.static('./views/images'));
 app.use('/u', express.static('./uploads'));
 
 require('./app/routes.js')(config, User, UserGroup, app, express, passport, upload, func); // load our routes and pass in our app and fully configured passport
+
+//====================================
+//======= Modules =================
+//====================================
+
+
+var moduleData = {};
+
+var Data = Object.assign({
+    config,
+    isDev,
+    express,
+    app,
+    multer,
+    upload,
+    mongoose,
+    passport,
+    flash,
+    morgan,
+    cookieParser,
+    bodyParser,
+    session,
+    configDB,
+    store,
+    db,
+    module_folders,
+    moduleData,
+
+
+    // models
+    UserGroup,
+    User,
+
+}, func);
+
+
+
+
+for (let j = 0; j < module_folders.length; j++) {
+    moduleData[module_folders[j][0].name] = require(`./modules/${module_folders[j][1]}/${module_folders[j][0].entryScript}`)(Data);
+}
+
 
 //====================================
 //======= Launching =================

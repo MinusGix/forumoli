@@ -1,9 +1,9 @@
-module.exports = function (mongoose, config, func, UserGroup) {
+module.exports = function (module_User, mongoose, config, func, UserGroup) {
     // load the things we need
     var bcrypt = require('bcrypt-nodejs');
 
     // define the schema for our user model
-    var userSchema = mongoose.Schema({
+    var userSchema = mongoose.Schema(func.mergeDeep({
 
         UserGroups: [String],
 
@@ -65,7 +65,7 @@ module.exports = function (mongoose, config, func, UserGroup) {
              name         : String
          }*/
 
-    });
+    }, module_User));
 
     // TODO: Find a way to use async/await with this
     // generating a hash

@@ -1,8 +1,8 @@
 // config/config.js
 /* jshint esversion:6 */
 
-module.exports = function (func) {
-    var config = {
+module.exports = function (module_Config, func) {
+    var config = func.mergeDeep({
         //Server things
         port: process.env.PORT || 8080, // the port the site will be hosted on, localhost:<port>
         secret: func.fs.readFileSync('./config/secret.txt', 'utf8'), // the secret for sessions 
@@ -183,9 +183,10 @@ module.exports = function (func) {
             user: 0,
             userGroup: 0
         },
+        version: "0.5.0", // SHOULD NOT BE EDITED
         // this is so i can have a savable version for any edits that should occur while the server is still running
         json: JSON.parse(require('fs').readFileSync('./config/config.json', 'utf8'))
-    };
+    }, module_Config);
 
     // makes config.defaultParsedPermissions contain more readable, not for mongoose, object
     for (let i in config.defaultPermissions) {

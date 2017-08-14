@@ -1,2 +1,2 @@
-#0001 - Problem in finding user with the getProfileUserByName middleware
+#0001 - Problem in finding user with the func.middleware.getProfileUserByName middleware
 #0002 - Problem in finding user with the getProfileUserById middleware

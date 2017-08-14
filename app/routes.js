@@ -11,7 +11,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     /*
     var getProfileUserById = async function (req, res, next) {
         if (typeof (req.params.userId) !== 'string') {
-            return res.render('_error.ejs', await generateReqData(req.user, {
+            return res.render('_error.ejs', await func.generateReqData(req.user, {
                 message: "Please enter an actual user's id."
             }));
         }
@@ -19,7 +19,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
             let user = await User.findById(req.params.userId);
 
             if (!func.isValidUser(user)) { // if that is not a valid user
-                return res.render('_error.ejs', await generateReqData(req.user, {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
                     message: "Sorry, but that does not appear to be a user."
                 }));
             }
@@ -32,11 +32,11 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
 
             // if there is an error and we are in dev mode it will display it on the page for simplicity
             if (isDev) {
-                return res.render('_error.ejs', await generateReqData(req.user, {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
                     message: err
                 }));
             } else {
-                return res.render('_error.ejs', await generateReqData(req.user, {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
                     message: 'Internal Server Error #0002'
                 }));
             }
@@ -44,51 +44,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     };*/
 
 
-    // find a profile user by their username
-    var getProfileUserByName = async function (req, res, next) {
-        // makes sure it's a string
-        if (typeof (req.params.username) !== 'string') {
-            return res.render('_error.ejs', await generateReqData(req.user, {
-                message: 'Please give a username.'
-            }));
-        }
-
-        try {
-            let user = await User.findOne({
-                'local.username': req.params.username.toLowerCase()
-            });
-
-            if (!func.isValidUser(user)) {
-                return res.render('_error.ejs', await generateReqData(req.user, {
-                    message: `A user with the name "${req.params.username}" was not found.`
-                }));
-            }
-
-            req.profileUser = user;
-            req.isThemself = false;
-
-            // decides whether they are viewing themself or not
-            if (func.isValidUser(req.user) && func.isValidUser(user)) {
-                req.isThemself = user.id === req.user.id;
-            }
-
-            // goes to the next function in an express function
-            return next();
-        } catch (err) {
-            console.error(err);
-
-            // if there is an error and we are in dev mode it will display it on the page for simplicity
-            if (isDev) {
-                return res.render('_error.ejs', await generateReqData(req.user, {
-                    message: err
-                }));
-            } else {
-                return res.render('_error.ejs', await generateReqData(req.user, {
-                    message: 'Error #0001, contact the administrator if this problem continues.'
-                }));
-            }
-        }
-    };
+    
 
     // =============================================================================
     // =================== normal routes ===========================================
@@ -96,7 +52,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
 
     // show the home page (will also have our login links)
     app.get('/', async function (req, res) {
-        res.render('index.ejs', await generateReqData(req.user));
+        res.render('index.ejs', await func.generateReqData(req.user));
     });
 
     // LOGOUT ==============================
@@ -108,8 +64,8 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     // =============================================================================
     // USER PROFILES ===============================================================
     // =============================================================================    
-
-    app.get('/users/:username', getProfileUserByName, async function (req, res) {
+    console.log(func.middleware);
+    app.get('/users/:username', func.middleware.getProfileUserByName, async function (req, res) {
         // Set them all to 0 by default, since someone could be not logged in and view this page
         var changeOwnBiography = 0;
         var changeOwnProfilePicture = 0;
@@ -136,14 +92,15 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
             username: req.isThemself ? changeOwnUsername : changeUsernames
         };
 
-        res.render('userProfile.ejs', await generateReqData(req.user, {
+        res.render('userProfile.ejs', await func.generateReqData(req.user, {
             profileUser: req.profileUser,
             isThemself: req.isThemself,
             canEdit: change.biography || change.profilePicture || change.username
         }));
     });
 
-    app.post('/users/:username/edit', getProfileUserByName, isLoggedIn, upload.single('profilePic'), async function (req, res) {
+
+    app.post('/users/:username/edit', func.middleware.getProfileUserByName, func.middleware.isLoggedIn, upload.single('profilePic'), async function (req, res) {
         var changeOwnBiography = 0;
         var changeOwnProfilePicture = 0;
         var changeOwnUsername = 0;
@@ -251,7 +208,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
 
     });
 
-    app.get('/users/:username/edit', getProfileUserByName, isLoggedIn, async function (req, res) {
+    app.get('/users/:username/edit', func.middleware.getProfileUserByName, func.middleware.isLoggedIn, async function (req, res) {
         var changeOwnBiography = 0;
         var changeOwnProfilePicture = 0;
         var changeOwnUsername = 0;
@@ -276,19 +233,19 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
             // the person they are editing is themselves
             if (changeOwnBiography === 0 && changeOwnProfilePicture === 0 && changeOwnUsername === 0) {
                 // they can not do any of those
-                return res.render('_error.ejs', await generateReqData(req.user, {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
                     message: 'Sorry, but you do not have any editing permissions for your own profile.'
                 }));
             }
         } else {
             if (changeBiographies === 0 && changeProfilePicture === 0 && changeUsernames === 0) {
-                return res.render('_error.ejs', await generateReqData(req.user, {
+                return res.render('_error.ejs', await func.generateReqData(req.user, {
                     message: "Sorry, but you do not have any editing permissions for this person's profile"
                 }));
             }
         }
 
-        res.render('userProfileEdit.ejs', await generateReqData(req.user, {
+        res.render('userProfileEdit.ejs', await func.generateReqData(req.user, {
             profileUser: req.profileUser,
             username: req.params.username,
             isThemself: req.isThemself,
@@ -312,12 +269,12 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
         }));
     });
 
-    app.get('/profile', isLoggedIn, function (req, res) {
+    app.get('/profile', func.middleware.isLoggedIn, function (req, res) {
         // redirects to /users/theirname/ for simplicity
         res.redirect('/users/' + req.user.local.displayName + '/');
     });
 
-    app.get('/profile/edit', isLoggedIn, function (req, res) {
+    app.get('/profile/edit', func.middleware.isLoggedIn, function (req, res) {
         // redirects to /users/theirname/edit for simplicity
         res.redirect('/users/' + req.user.local.displayName + '/edit');
     });
@@ -326,35 +283,35 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     // ADMINISTRATOR PAGES =========================================================
     // =============================================================================
 
-    app.get('/admin/', isAdmin, async function (req, res) {
-        res.render('admin/admin.ejs', await generateReqData(req.user));
+    app.get('/admin/', func.middleware.isAdminM, async function (req, res) {
+        res.render('admin/admin.ejs', await func.generateReqData(req.user));
     });
 
     // for testing permissions
-    app.get('/admin/permtest', isAdmin, async function (req, res) {
-        res.render('admin/permTest.ejs', await generateReqData(req.user));
+    app.get('/admin/permtest', func.middleware.isAdminM, async function (req, res) {
+        res.render('admin/permTest.ejs', await func.generateReqData(req.user));
     });
 
     // for making and editing usergroups
-    app.get('/admin/usergroups', isAdmin, async function (req, res) {
+    app.get('/admin/usergroups', func.middleware.isAdminM, async function (req, res) {
         var usergroups = await UserGroup.find({});
 
-        res.render('admin/userGroups.ejs', await generateReqData(req.user, {
+        res.render('admin/userGroups.ejs', await func.generateReqData(req.user, {
             usergroups
         }));
     });
 
-    app.get('/admin/usergroups/:username', isAdmin, getProfileUserByName, async function (req, res) {
+    app.get('/admin/usergroups/:username', func.middleware.isAdminM, func.middleware.getProfileUserByName, async function (req, res) {
         var usergroups = await req.profileUser.getUserGroups();
 
-        res.render('admin/userUserGroups.ejs', await generateReqData(req.user, {
+        res.render('admin/userUserGroups.ejs', await func.generateReqData(req.user, {
             usergroups,
             isThemself: req.isThemself,
             profileUser: req.profileUser
         }));
     });
 
-    app.post('/admin/api/saveUsersUsergroups', isAdmin, async function (req, res) {
+    app.post('/admin/api/saveUsersUsergroups', func.middleware.isAdminM, async function (req, res) {
         var usergroups = req.body.groups;
         var username = req.body.username;
 
@@ -394,11 +351,11 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
         });
     });
     
-    app.post('/admin/api/getAllUsergroups', isAdmin, async function (req, res) {
+    app.post('/admin/api/getAllUsergroups', func.middleware.isAdminM, async function (req, res) {
         var usergroups = await UserGroup.find({});
         res.send(JSON.stringify(usergroups));
     });
-    app.post('/admin/api/getUsergroups', isAdmin, async function (req, res) {
+    app.post('/admin/api/getUsergroups', func.middleware.isAdminM, async function (req, res) {
         var wants = req.body.wants;
         var usergroups = await UserGroup.find({}); // gets all usergroups
         
@@ -439,7 +396,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     });
 
     // save the permissions of a usergroup, if it doesn't exist it creates it.
-    app.post('/admin/api/savePermissions', isAdmin, async function (req, res) {
+    app.post('/admin/api/savePermissions', func.middleware.isAdminM, async function (req, res) {
         var name = req.body.name;
         var type = req.body.type;
         var perms = req.body.perms;
@@ -536,7 +493,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     });
 
     // get the permissions for a usergroup, if that usergroup doesn't exist it returns the default permissions
-    app.get('/admin/api/getPermissions', isAdmin, async function (req, res) {
+    app.get('/admin/api/getPermissions', func.middleware.isAdminM, async function (req, res) {
         var name = req.query.name;
         var type = req.query.type;
 
@@ -605,7 +562,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
 
     // show the login form
     app.get('/login', async function (req, res) {
-        res.render('login.ejs', await generateReqData(req.user, {
+        res.render('login.ejs', await func.generateReqData(req.user, {
             message: req.flash('loginMessage')
         }));
     });
@@ -622,7 +579,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     // =============================================================================
     // show the signup form
     app.get('/signup', async function (req, res) {
-        res.render('signup.ejs', await generateReqData(req.user, {
+        res.render('signup.ejs', await func.generateReqData(req.user, {
             message: req.flash('signupMessage')
         }));
     });
@@ -646,51 +603,9 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
 
 
     // Delete accounts
-    app.get('/deleteaccount', isLoggedIn, function (req, res) {
-        res.render('deleteAccount.ejs', generateReqData(req.user));
+    app.get('/deleteaccount', func.middleware.isLoggedIn, function (req, res) {
+        res.render('deleteAccount.ejs', func.generateReqData(req.user));
     });
 
-    // route middleware to ensure user is logged in
-    function isLoggedIn(req, res, next) {
-        if (req.isAuthenticated()) {
-            return next();
-        }
-
-        res.redirect('/');
-    }
-
-    // checks if the user is logged in and is an admin
-    function isAdmin(req, res, next) {
-        if (req.isAuthenticated()) {
-            if (func.isAdmin(req.user)) {
-                return next();
-            }
-        }
-        res.redirect('/');
-    }
-
-    // generates data for each page, for simplicity and non-repetitiveness
-    async function generateReqData(user, extraObj) {
-        let obj = {
-            config, // the config, so if we want to do anything based on it
-            user, // the user who is requesting the page
-            isValidUser: func.isValidUser, // a function that tells if it is a valid user, checks if they are 'enabled'
-            getImage: func.getImage, // gets the users image
-            func, // some functions which are useful
-            message: '', // so anything that relies on this won't break if the message is undefined
-            get: function () { // returns this obj so we can pass it to the titlebar in ejs's include()
-                return this;
-            }
-        };
-
-        if (func.isValidUser(user)) {
-            obj.permissions = await user.getPermissions();
-        }
-
-        if (typeof (extraObj) === 'object' && extraObj !== null) {
-            Object.assign(obj, extraObj); // mixes the two objects, extraObj properties will take precedence over obj's properties
-        }
-
-        return obj;
-    }
+    
 };

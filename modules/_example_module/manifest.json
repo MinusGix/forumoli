@@ -1,0 +1,34 @@
+{
+	"_comment": "_comment's are comments meant for helping understanding the text, they are not used in the code at all.",
+
+	"_comment": "(Optional, defaults to the name of the folder)The name of the module to be displayed.",
+	"name": "Example Module",
+
+
+	"_comment": "(Optional, defaults to '0.0.1') The version of the module. All versions must be three numbers separated by a decimal.",
+	"version": "0.0.1",
+
+
+	"_comment": "(Optional, defaults to 'Unknown') The author of the module.",
+	"author": "MinusGix",
+
+
+	"_comment": "(Optional, default: '*.*.*') The version required to run this module. All versions are three numbers.",
+	"_comment": "*.0.5, * means a wildcard, can be any number.",
+	"_comment": "[version], >[version], and +[version] mean that the main Servers version should be [version] or greater.",
+	"_comment": "=[version] means it 'softly' must be the same version. 0.5.5 would count the same as 0.5.4, 0.5.3, 0.5.2, 0.5.1., 0.5.0, essentially it ignores the third number.",
+	"_comment": "==[version] means it must be the EXACT same version.",
+	"_comment": "<[version] and -[version] mean that the server version must be [version] or lower",
+	"forVersion": ">0.5.0",
+
+	"_comment": "(Optional, default: 'index.js') The first script to be ran, will be passed an object of info",
+	"entryScript": "index.js",
+
+	"_comment": "(Optional, default: {}) Overwrite base models, mixes them together with the module's overwrites taking precedence. Uses Object.assign to mix them.",
+	"models": {
+		"user": "models/user.js"
+	},
+
+	"_comment": "(Optional, default: ''), Overwrites base config, mixing them together with the modules overwrites taking precedence. Uses Object.assign ot mix them.",
+	"config": "config.js"
+}

@@ -6,6 +6,22 @@ module.exports = function (func) {
 			default: function () {
 				return Math.random().toString(36).slice(2);
 			}
+		},
+		example_module_prop: {
+			a: {
+				type: Number,
+				default: 10
+			},
+			b: {
+				default: 50
+			},
+			c: {
+				type: Number,
+				default: 20
+			},
+			e: {
+				type: Number
+			}
 		}
 	}
 }

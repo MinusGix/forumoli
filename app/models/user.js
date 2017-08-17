@@ -1,9 +1,9 @@
-module.exports = function (module_User, mongoose, config, func, UserGroup) {
+module.exports = function (modules, mongoose, config, func, UserGroup) {
     // load the things we need
     var bcrypt = require('bcrypt-nodejs');
 
-    // define the schema for our user model
-    var userSchema = mongoose.Schema(func.mergeDeep({
+    // not inside the other function so i can check this if need be.
+    var mergedSchema = modules.getMerged('user', {
 
         UserGroups: [String],
 
@@ -65,7 +65,10 @@ module.exports = function (module_User, mongoose, config, func, UserGroup) {
              name         : String
          }*/
 
-    }, module_User));
+    });
+    console.warn('----------------------aaaaaaa', mergedSchema);
+    // define the schema for our user model
+    var userSchema = mongoose.Schema(mergedSchema);
 
     // TODO: Find a way to use async/await with this
     // generating a hash

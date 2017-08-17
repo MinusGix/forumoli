@@ -1,6 +1,6 @@
 /* jshint esversion:6 */
 
-module.exports = function (config, User, UserGroup, app, express, passport, upload, func) {
+module.exports = function (modules, config, User, UserGroup, app, express, passport, upload, func) {
     var isDev = config.isDev; // if it is in dev mode
 
     // =============================================================================
@@ -64,7 +64,6 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
     // =============================================================================
     // USER PROFILES ===============================================================
     // =============================================================================    
-    console.log(func.middleware);
     app.get('/users/:username', func.middleware.getProfileUserByName, async function (req, res) {
         // Set them all to 0 by default, since someone could be not logged in and view this page
         var changeOwnBiography = 0;
@@ -342,9 +341,7 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
         if (!func.isValidUser(user)) {
             return res.send('Cannot edit a user that doesn\'t exist! (Perhaps their name was changed as you were doing this)');
         }
-        console.log(usergroups);
         user.UserGroups = usergroups.filter((v, i) => usergroups.indexOf(v) === i).filter(v => typeof(v) === 'string');
-        console.log(user.UserGroups);
         user.markModified('UserGroups');
         user.save(function() {
             return res.send('Saved');
@@ -607,5 +604,8 @@ module.exports = function (config, User, UserGroup, app, express, passport, uplo
         res.render('deleteAccount.ejs', func.generateReqData(req.user));
     });
 
-    
+    // modules
+    modules.run('routes', {
+        modules, config, User, UserGroup, app, express, passport, upload, func
+    });
 };

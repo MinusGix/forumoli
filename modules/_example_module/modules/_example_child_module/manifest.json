@@ -1,0 +1,12 @@
+{
+	"_comment": "_comment's are comments meant for helping understanding the text, they are not used in the code at all.",
+
+	"name": "Example Child Module",
+	"version": "0.0.1",
+	"author": "MinusGix",
+	"forVersion": ">0.5.0",
+	"entryScript": "index.js",
+	"models": {
+		"user": "models/user.js"
+	}
+}

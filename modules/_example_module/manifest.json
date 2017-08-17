@@ -19,9 +19,10 @@
 	"_comment": "=[version] means it 'softly' must be the same version. 0.5.5 would count the same as 0.5.4, 0.5.3, 0.5.2, 0.5.1., 0.5.0, essentially it ignores the third number.",
 	"_comment": "==[version] means it must be the EXACT same version.",
 	"_comment": "<[version] and -[version] mean that the server version must be [version] or lower",
+	"_comment": "CURRENTLY NOT IMPLEMENTED",
 	"forVersion": ">0.5.0",
 
-	"_comment": "(Optional, default: 'index.js') The first script to be ran, will be passed an object of info",
+	"_comment": "(Optional, default: 'index.js') Ran after everything is initialized, so it runs after app passport config usermodel usergroupmodel, will be passed an object of info",
 	"entryScript": "index.js",
 
 	"_comment": "(Optional, default: {}) Overwrite base models, mixes them together with the module's overwrites taking precedence. Uses Object.assign to mix them.",

@@ -64,9 +64,9 @@
 			req.addEventListener("error", function(evt) {
 				// TODO: make something better than this
                 alert("Sorry, but there was an error, please try again.");
-                console.log('There was an error:');
-                console.log(evt);
-                console.log(this);
+                console.info('There was an error:');
+                console.info(evt);
+                console.info(this);
             });
 
             req.open("POST", "/admin/api/getUsergroups", true);
@@ -85,9 +85,9 @@
 			req.addEventListener("error", function(evt) {
 				// TODO: make something better than this
                 alert("Sorry, but there was an error, please try again.");
-                console.log('There was an error:');
-                console.log(evt);
-                console.log(this);
+                console.info('There was an error:');
+                console.info(evt);
+                console.info(this);
             });
 
 			var groups = Array.prototype.slice.call(document.querySelectorAll('ul>li>span')).slice(0);

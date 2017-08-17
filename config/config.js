@@ -1,8 +1,8 @@
 // config/config.js
 /* jshint esversion:6 */
 
-module.exports = function (module_Config, func) {
-    var config = func.mergeDeep({
+module.exports = function (modules, func) {
+    var config = modules.getMerged('config', {
         //Server things
         port: process.env.PORT || 8080, // the port the site will be hosted on, localhost:<port>
         secret: func.fs.readFileSync('./config/secret.txt', 'utf8'), // the secret for sessions 
@@ -186,9 +186,9 @@ module.exports = function (module_Config, func) {
         version: "0.5.0", // SHOULD NOT BE EDITED
         // this is so i can have a savable version for any edits that should occur while the server is still running
         json: JSON.parse(require('fs').readFileSync('./config/config.json', 'utf8'))
-    }, module_Config);
+    });
 
-    // makes config.defaultParsedPermissions contain more readable, not for mongoose, object
+    // makes config.defaultParsedPermissions contain more readable, not for mongoose
     for (let i in config.defaultPermissions) {
         config.defaultParsedPermissions[i] = {};
         for (let j in config.defaultPermissions[i]) {
@@ -199,7 +199,7 @@ module.exports = function (module_Config, func) {
             }
         }
     }
-    // set up admin perms
+    // set up admin perms to all be 'true'
     for (let i in config.defaultParsedPermissions) {
         config.adminPermissions[i] = func.copy(config.defaultParsedPermissions[i]);
         config.adminPermissions[i].can = 1;

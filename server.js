@@ -1,6 +1,8 @@
 /*jshint esversion:6*/
 // server.js
 
+var colors = require('colors/safe');
+
 
 function copy(o) {
     // taken from : https://stackoverflow.com/a/43235072/4923167
@@ -329,7 +331,7 @@ function isAdminM(req, res, next) {
  * @returns {boolean}
  */
 function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
+    return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
 /**
@@ -338,21 +340,25 @@ function isObject(item) {
  * @param ...sources
  */
 function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
+    if (!sources.length) return target;
+    const source = sources.shift();
 
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
+    if (isObject(target) && isObject(source)) {
+        for (const key in source) {
+            if (isObject(source[key])) {
+                if (!target[key]) Object.assign(target, {
+                    [key]: {}
+                });
+                mergeDeep(target[key], source[key]);
+            } else {
+                Object.assign(target, {
+                    [key]: source[key]
+                });
+            }
+        }
     }
-  }
 
-  return mergeDeep(target, ...sources);
+    return mergeDeep(target, ...sources);
 }
 
 var func = {
@@ -375,52 +381,53 @@ var func = {
         isLoggedIn,
     },
     fs: require('fs'),
+    colors
 };
 // find a profile user by their username
 async function getProfileUserByName(req, res, next) {
-        // makes sure it's a string
-        if (typeof (req.params.username) !== 'string') {
+    // makes sure it's a string
+    if (typeof (req.params.username) !== 'string') {
+        return res.render('_error.ejs', await func.generateReqData(req.user, {
+            message: 'Please give a username.'
+        }));
+    }
+
+    try {
+        let user = await User.findOne({
+            'local.username': req.params.username.toLowerCase()
+        });
+
+        if (!func.isValidUser(user)) {
             return res.render('_error.ejs', await func.generateReqData(req.user, {
-                message: 'Please give a username.'
+                message: `A user with the name "${req.params.username}" was not found.`
             }));
         }
 
-        try {
-            let user = await User.findOne({
-                'local.username': req.params.username.toLowerCase()
-            });
+        req.profileUser = user;
+        req.isThemself = false;
 
-            if (!func.isValidUser(user)) {
-                return res.render('_error.ejs', await func.generateReqData(req.user, {
-                    message: `A user with the name "${req.params.username}" was not found.`
-                }));
-            }
-
-            req.profileUser = user;
-            req.isThemself = false;
-
-            // decides whether they are viewing themself or not
-            if (func.isValidUser(req.user) && func.isValidUser(user)) {
-                req.isThemself = user.id === req.user.id;
-            }
-
-            // goes to the next function in an express function
-            return next();
-        } catch (err) {
-            console.error(err);
-
-            // if there is an error and we are in dev mode it will display it on the page for simplicity
-            if (isDev) {
-                return res.render('_error.ejs', await func.generateReqData(req.user, {
-                    message: err
-                }));
-            } else {
-                return res.render('_error.ejs', await func.generateReqData(req.user, {
-                    message: 'Error #0001, contact the administrator if this problem continues.'
-                }));
-            }
+        // decides whether they are viewing themself or not
+        if (func.isValidUser(req.user) && func.isValidUser(user)) {
+            req.isThemself = user.id === req.user.id;
         }
-    };
+
+        // goes to the next function in an express function
+        return next();
+    } catch (err) {
+        console.error(err);
+
+        // if there is an error and we are in dev mode it will display it on the page for simplicity
+        if (isDev) {
+            return res.render('_error.ejs', await func.generateReqData(req.user, {
+                message: err
+            }));
+        } else {
+            return res.render('_error.ejs', await func.generateReqData(req.user, {
+                message: 'Error #0001, contact the administrator if this problem continues.'
+            }));
+        }
+    }
+};
 async function generateReqData(user, extraObj) {
     let obj = {
         config, // the config, so if we want to do anything based on it
@@ -445,53 +452,17 @@ async function generateReqData(user, extraObj) {
     return obj;
 }
 
-var module_folders = func.fs.readdirSync('./modules');
-var module_User = {};
-var module_UserGroup = {};
-var module_Config = {};
 
-for (let i = 0; i < module_folders.length; i++) {
-    var folder = module_folders[i];
+var module_parser = require('./main/modules.js')(__dirname, func);
 
+var modules = module_parser.loadAllModules('modules');
 
-    var manifest_loc = `./modules/${folder}/manifest.json`;
-    var manifest = func.fs.existsSync(manifest_loc);
-
-    if (!manifest) {
-        console.log(`WARNING: Module with the folder name "${folder}" does not have a manifest.json`);
-        manifest = {};
-    } else {
-        manifest = JSON.parse(func.fs.readFileSync(manifest_loc, 'utf8'));
-    }
-
-    if (!manifest.name) manifest.name = folder;
-    if (!manifest.version) manifest.version = '0.0.1';
-    if (!manifest.forVersion) manifest.forVersion = '*.*.*';
-    if (!manifest.author) manifest.author = 'Unknown';
-    if (!manifest.entryScript) manifest.entryScript = "index.js";
-    if (!manifest.models) manifest.models = {};
-    if (!manifest.config) manifest.config = '';
-
-    module_folders[i] = [manifest, module_folders[i]];
-
-    if (manifest.models.user) {
-        module_User = mergeDeep(module_User, require(`./modules/${folder}/${manifest.models.user}`)(func));
-    }
-
-    if (manifest.models.usergroup) {
-        module_UserGroup = mergeDeep(module_UserGroup, require(`./modules/${folder}/${manifest.models.usergroup}`)(func));
-    }
-    
-    if (manifest.config) {
-        module_Config = mergeDeep(module_Config, require(`./modules/${folder}/${manifest.config}`)(func))
-    }
-}
 
 //====================================
 //======= SETUP/REQUIRES =============
 //====================================
 
-var config = require('./config/config.js')(module_Config, func); // the config file. // TODO: Find if it would be better to use .js or .json
+var config = require('./config/config.js')(modules, func); // the config file. // TODO: Find if it would be better to use .js or .json
 var isDev = config.isDev; // if it is in dev mode, show errors on page if it is
 
 
@@ -515,8 +486,8 @@ var session = require('express-session'); // keeps sessions between opening/clos
 var configDB = require('./config/database.js'); // loads the database config
 var store = new(require('express-sessions'))(configDB.db); // loads the sessions with that database // TODO: find what this is
 
-var UserGroup = require('./app/models/userGroups.js')(module_UserGroup, mongoose, config, func);
-var User = require('./app/models/user.js')(module_User, mongoose, config, func, UserGroup);
+var UserGroup = require('./app/models/userGroups.js')(modules, mongoose, config, func);
+var User = require('./app/models/user.js')(modules, mongoose, config, func, UserGroup);
 
 //====================================
 //======= CONFIGURATION ==============
@@ -530,7 +501,7 @@ var db = mongoose.connection; //
 
 db.on('error', console.error.bind(console, 'connection error: '));
 db.once('open', function () {
-    console.log("connected to Database");
+    console.info("connected to Database");
 });
 
 //====================================
@@ -540,7 +511,7 @@ process.on('unhandledRejection', (err) => {
     console.error('Async/Await error: ' + err);
     process.exit(1);
 });
-require('./config/passport')(config, passport, User, UserGroup, func); // pass passport for configuration
+require('./config/passport')(modules, config, passport, User, UserGroup, func); // pass passport for configuration
 //====================================
 //======= EXPRESS ====================
 //====================================
@@ -580,14 +551,11 @@ app.use('/js', express.static('./views/js'));
 app.use('/images', express.static('./views/images'));
 app.use('/u', express.static('./uploads'));
 
-require('./app/routes.js')(config, User, UserGroup, app, express, passport, upload, func); // load our routes and pass in our app and fully configured passport
+require('./app/routes.js')(modules, config, User, UserGroup, app, express, passport, upload, func); // load our routes and pass in our app and fully configured passport
 
 //====================================
 //======= Modules =================
 //====================================
-
-
-var moduleData = {};
 
 var Data = Object.assign({
     config,
@@ -606,9 +574,18 @@ var Data = Object.assign({
     configDB,
     store,
     db,
-    module_folders,
-    moduleData,
-
+    
+    modules,
+    // NOTE: removeRoute should not be used outside of initial script (aka no using it in your pages) since it is not async
+    removeRoute: function (path) {
+        app._router.stack.forEach((stack, index) => {
+            if (stack === undefined || stack === null) return;
+            if (stack.route === undefined || stack.route === null) return;
+            if (stack.route.path === path) {
+                app._router.stack.splice(index, 1);
+            }
+        });
+    },
 
     // models
     UserGroup,
@@ -618,10 +595,8 @@ var Data = Object.assign({
 
 
 
-
-for (let j = 0; j < module_folders.length; j++) {
-    moduleData[module_folders[j][0].name] = require(`./modules/${module_folders[j][1]}/${module_folders[j][0].entryScript}`)(Data);
-}
+modules.run('entryscript', Data);
+//moduleData[module_folders[j][0].name] = require(`./modules/${module_folders[j][1]}/${module_folders[j][0].entryScript}`)(Data);
 
 
 //====================================
@@ -629,4 +604,4 @@ for (let j = 0; j < module_folders.length; j++) {
 //====================================
 
 app.listen(config.port); // makes the app listen on localhost:<port>
-console.log('Server started on port: ' + config.port); // just tells me when the server has started up
+console.info('Server started on port: ' + config.port); // just tells me when the server has started up

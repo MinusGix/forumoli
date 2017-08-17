@@ -117,7 +117,6 @@
         // ========================================
         
         function showPermissions (e) {
-            console.log('showPermissions activated!');
             lastButtonClicked = this;
             var req = new XMLHttpRequest();
             var permcard = document.getElementById('perm-card');
@@ -154,7 +153,6 @@
 
                         permcard.append(resetButton);
                         permcard.append(document.createElement('br'));
-                        console.log(perms);
                         for (var i in perms) {
                             var card = document.createElement('div');
                             card.className = "mdl-card custom-card-smaller";
@@ -199,7 +197,6 @@
                                 } else if (val === 2) {
                                     text = "fall-through";
                                 }
-                                console.log(this.parentNode)
                                 this.parentNode.querySelector('span').innerText = text;
                             });
                             actionSlider.value = String(perms[i].can); // instead of being the default values they will all be 'fall-through'
@@ -218,9 +215,9 @@
             });
             req.addEventListener("error", function(evt) {
                 permcard.innerText = "Sorry, but there was an error, please try again."
-                console.log('There was an error:');
-                console.log(evt);
-                console.log(this);
+                console.info('There was an error:');
+                console.info(evt);
+                console.info(this);
             });
 
             permcard.innerText = "Loading...";
@@ -238,7 +235,6 @@
             for (let i = 0; i < eleAllPerms.length; i++) {
                 perms[eleAllPerms[i].getAttribute("name")] = Number(eleAllPerms[i].querySelector('input').value);
             }
-            console.log(perms);
             var req = new XMLHttpRequest();
 
             req.addEventListener("load", function (evt) {
@@ -249,9 +245,9 @@
 
             req.addEventListener("error", function(evt) {
                 self.innerText = "Error, Please retry";
-                console.log('There was an error in saving:');
-                console.log(evt);
-                console.log(this);
+                console.info('There was an error in saving:');
+                console.info(evt);
+                console.info(this);
             });
 
             self.innerText = "Saving...";
@@ -272,7 +268,7 @@
         // ====== OTHER STUFF ======
         // =========================
 
-        console.log('%c DO NOT PUT ANYTHING IN HERE UNLESS YOU KNOW WHAT YOU ARE DOING!', 'font-size: 500%; color: red; background-color: grey;');
+        console.info('%c DO NOT PUT ANYTHING IN HERE UNLESS YOU KNOW WHAT YOU ARE DOING!', 'font-size: 500%; color: red; background-color: grey;');
         
     </script>
 

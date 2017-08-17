@@ -12,7 +12,7 @@
     <h1>Example Module Page</h1>
     <% if (isValidUser(user)) { %>
         <% if (typeof(user.example_module_random_name) !== 'undefined') { %>
-            <p>example_module_random_name : <%= user.example_module_random_name %> </p>
+            <p>example_module_random_name : <%= JSON.stringify(user.example_module_prop) %> </p>
         <% } %>
     <% } %>
 
